@@ -1,0 +1,40 @@
+services:
+  php_composer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php_composer
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - 8000:8000
+    command: tail -f /dev/null
+    depends_on:
+      - db
+
+  node:
+    image: node:24.5
+    container_name: node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - 5173:5173
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+    driver: local
