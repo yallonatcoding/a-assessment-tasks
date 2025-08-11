@@ -2,6 +2,9 @@
 
 namespace App\Domain\Task;
 
+use App\Domain\Shared\PagedResult;
+use App\Domain\Task\Task;
+
 /**
  * Interface TaskRepositoryInterface
  *

@@ -14,9 +14,10 @@ class TaskMapper
     {
         return new Task(
             $model->id,
+            $model->user_id,
             $model->title,
             $model->description,
-            $model->isCompleted,
+            $model->is_completed,
             $model->created_at,
             $model->updated_at
         );
@@ -25,9 +26,10 @@ class TaskMapper
     public static function toPersistence(Task $task): array
     {
         return [
+            'user_id' => $task->userId(),
             'title' => $task->title(),
             'description' => $task->description(),
-            'isCompleted' => $task->isCompleted(),
+            'is_completed' => $task->isCompleted(),
             'created_at' => $task->createdAt(),
             'updated_at' => $task->updatedAt(),
         ];

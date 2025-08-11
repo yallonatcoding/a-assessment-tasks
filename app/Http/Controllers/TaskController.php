@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Domain\Auth\UserPermissionValidatorInterface;
 use App\Domain\Task\TaskRepositoryInterface;
 use App\Domain\Task\Task;
-use Inertia\Inertia;
+use App\Domain\UserTask\UserTask;
+use App\Domain\UserTask\UserTaskRepositoryInterface;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Class TaskController
@@ -15,35 +18,49 @@ use Inertia\Inertia;
 class TaskController extends Controller
 {
     private $tasks;
+    private $usersTasks;
 
-    public function __construct(TaskRepositoryInterface $tasks)
-    {
+    public function __construct(
+        TaskRepositoryInterface $tasks,
+        UserTaskRepositoryInterface $usersTasks
+    ) {
         $this->tasks = $tasks;
+        $this->usersTasks = $usersTasks;
     }
 
     public function index()
     {
-        $tasks = null;
-
-        try {
-            $tasks = $this->tasks->all();
-        } catch (\Exception $e) {
-            return Inertia::render('Error', [
-                'message' => 'Error fetching tasks: ' . $e->getMessage(),
-            ]);
-        }
-
-        return Inertia::render('Tasks/Index', [
-            'tasks' => $tasks,
-        ]);
+        return inertia('Tasks/Index');
     }
 
-    public function showAll()
+    public function showAllByUser(Request $request)
     {
-        $tasks = null;
+        $tasks = [];
+
+        $validator = Validator::make($request->all(), [
+            'filters' => ['nullable', 'array'],
+            'filters.search' => ['nullable', 'string', 'max:255'],
+            'filters.sort_by' => ['nullable', 'string', 'in:title,is_completed,created_at,updated_at'],
+            'filters.sort_dir' => ['nullable', 'string', 'in:asc,desc'],
+            'filters.page' => ['nullable', 'integer', 'min:1'],
+            'filters.per_page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $filters = $validator->validated()['filters'] ?? [];
 
         try {
-            $tasks = $this->tasks->all();
+            $tasks = $this->usersTasks->searchByUser(
+                $request->user()->id,
+                $filters['filters'] ?? [],
+                $filters['page'] ?? 1,
+                $filters['perPage'] ?? 15
+            );
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error fetching tasks: ' . $e->getMessage(),
@@ -87,6 +104,7 @@ class TaskController extends Controller
 
         $task = new Task(
             0,
+            $request->user()->id,
             $data['title'],
             $data['description'] ?? '',
             false,
@@ -95,7 +113,24 @@ class TaskController extends Controller
         );
 
         try {
-            $this->tasks->create($task);
+            $task = $this->tasks->create($task);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error creating task: ' . $e->getMessage(),
+                'success' => false,
+            ], 400);
+        }
+
+        $userTask = new UserTask(
+            0,
+            $request->user()->id,
+            $task->id(),
+            new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s')),
+            new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s'))
+        );
+
+        try {
+            $this->usersTasks->create($userTask);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error creating task: ' . $e->getMessage(),
@@ -109,8 +144,15 @@ class TaskController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, UserPermissionValidatorInterface $validator)
     {
+        if (! $validator->canModify($request->user()->id, $id)) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'success' => false,
+            ], 403);
+        }
+
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -129,7 +171,8 @@ class TaskController extends Controller
         }
 
         $task = new Task(
-            $task->id(),
+            $id,
+            $request->user()->id,
             $data['title'],
             $data['description'] ?? $task->description(),
             $data['isCompleted'],
@@ -152,8 +195,15 @@ class TaskController extends Controller
         ]);
     }
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id, UserPermissionValidatorInterface $validator)
     {
+        if (! $validator->canModify($request->user()->id, $id)) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'success' => false,
+            ], 403);
+        }
+
         try {
             $this->tasks->delete($id);
         } catch (\Exception $e) {

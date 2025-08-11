@@ -17,7 +17,7 @@ class EloquentTaskRepository implements TaskRepositoryInterface
 {
     public function all(): array | \Exception
     {
-        $models = null;
+        $models = [];
 
         try {
             $models = EloquentTaskModel::all();

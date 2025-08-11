@@ -12,6 +12,8 @@ class Task
 {
     private int $id;
 
+    private int $userId;
+
     private string $title;
     
     private ?string $description;
@@ -26,6 +28,7 @@ class Task
      * Task constructor.
      *
      * @param int $id
+     * @param int $userId
      * @param string $title
      * @param string|null $description
      * @param bool $isCompleted
@@ -34,22 +37,25 @@ class Task
      */
     public function __construct(
         int $id,
+        int $userId,
         string $title,
         ?string $description = '',
         bool $isCompleted = false,
         \DateTimeImmutable $createdAt,
         \DateTimeImmutable $updatedAt,
     ) {
-        $this->id = $id;        
-        $this->title = $title;        
-        $this->description = $description;        
-        $this->isCompleted = $isCompleted;        
-        $this->createdAt = $createdAt;        
+        $this->id = $id;
+        $this->userId = $userId;      
+        $this->title = $title;
+        $this->description = $description;
+        $this->isCompleted = $isCompleted;
+        $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
     }
     
-    
     public function id(): int { return $this->id; }
+
+    public function userId(): int { return $this->userId; }
     
     public function title(): string { return $this->title; }
     

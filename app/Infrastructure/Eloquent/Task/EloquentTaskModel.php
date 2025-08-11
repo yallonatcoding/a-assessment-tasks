@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Eloquent model for the Task entity.
  *
- * @property int $id
  * @property string $title
  * @property string $description
  * @property bool $isCompleted
@@ -20,9 +19,10 @@ class EloquentTaskModel extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'title',
         'description',
-        'isCompleted',
+        'is_completed',
     ];
 
     /**

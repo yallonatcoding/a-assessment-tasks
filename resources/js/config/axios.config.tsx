@@ -4,7 +4,9 @@ const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.APP_URL || '',
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
+    'Accept': 'application/json'
   },
+  withCredentials: true,
 });
 
 api.interceptors.request.use(

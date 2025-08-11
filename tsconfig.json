@@ -13,8 +13,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+        "@/*": ["resources/js/*"],
+        "ziggy-js": ["./vendor/tightenco/ziggy"]
+    }
   },
   "include": ["resources/js/**/*", "resources/js/vite-env.d.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "public"]
 }
