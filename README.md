@@ -8,7 +8,7 @@ Está dockerizado para facilitar su instalación y ejecución.
 
 ## Requisitos
 
-- Docker y Docker Compose instalados en tu máquina.
+- Docker instalado en tu máquina.
 - (Opcional) Node.js y PHP si quieres ejecutar fuera de Docker.
 
 ---
