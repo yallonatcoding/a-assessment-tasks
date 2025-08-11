@@ -1,7 +1,7 @@
 # Proyecto Laravel + React con Docker
 
 ## Descripción
-Este proyecto es una aplicación Laravel con frontend en React (usando Inertia.js) or Axios, que permite gestionar tareas con funcionalidades como filtrado, paginado, creación y actualización.  
+Este proyecto es una aplicación Laravel con frontend en React (usando Inertia.js), que permite gestionar tareas con funcionalidades como paginado, creación, actualización y eliminación.  
 Está dockerizado para facilitar su instalación y ejecución.
 
 ---
