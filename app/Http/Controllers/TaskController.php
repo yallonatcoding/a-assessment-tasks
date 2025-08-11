@@ -8,6 +8,7 @@ use App\Domain\Task\TaskRepositoryInterface;
 use App\Domain\Task\Task;
 use App\Domain\UserTask\UserTask;
 use App\Domain\UserTask\UserTaskRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -38,13 +39,14 @@ class TaskController extends Controller
         $tasks = [];
 
         $validator = Validator::make($request->all(), [
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1'],
             'filters' => ['nullable', 'array'],
             'filters.search' => ['nullable', 'string', 'max:255'],
             'filters.sort_by' => ['nullable', 'string', 'in:title,is_completed,created_at,updated_at'],
             'filters.sort_dir' => ['nullable', 'string', 'in:asc,desc'],
-            'filters.page' => ['nullable', 'integer', 'min:1'],
-            'filters.per_page' => ['nullable', 'integer', 'min:1'],
         ]);
+
 
         if ($validator->fails()) {
             return response()->json([
@@ -53,13 +55,15 @@ class TaskController extends Controller
         }
 
         $filters = $validator->validated()['filters'] ?? [];
+        $page = $validator->validated()['page'] ?? [];
+        $perPage = $validator->validated()['per_page'] ?? [];
 
         try {
             $tasks = $this->usersTasks->searchByUser(
                 $request->user()->id,
                 $filters['filters'] ?? [],
-                $filters['page'] ?? 1,
-                $filters['perPage'] ?? 15
+                $page ?? 1,
+                $perPage ?? 10
             );
         } catch (\Exception $e) {
             return response()->json([
@@ -102,46 +106,46 @@ class TaskController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $task = new Task(
-            0,
-            $request->user()->id,
-            $data['title'],
-            $data['description'] ?? '',
-            false,
-            new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s')),
-            new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s'))
-        );
-
+        DB::beginTransaction();
+        
         try {
+            $task = new Task(
+                0,
+                $request->user()->id,
+                $data['title'],
+                $data['description'] ?? '',
+                false,
+                new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s')),
+                new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s'))
+            );
+
             $task = $this->tasks->create($task);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error creating task: ' . $e->getMessage(),
-                'success' => false,
-            ], 400);
-        }
 
-        $userTask = new UserTask(
-            0,
-            $request->user()->id,
-            $task->id(),
-            new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s')),
-            new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s'))
-        );
+            $userTask = new UserTask(
+                0,
+                $request->user()->id,
+                $task->id(),
+                new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s')),
+                new \DateTimeImmutable((new \DateTime())->format('Y-m-d H:i:s'))
+            );
 
-        try {
             $this->usersTasks->create($userTask);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Task created successfully',
+                'success' => true,
+            ], 201);
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            
             return response()->json([
                 'message' => 'Error creating task: ' . $e->getMessage(),
                 'success' => false,
             ], 400);
         }
-
-        return response()->json([
-            'message' => 'Task created successfully',
-            'success' => true,
-        ], 201);
     }
 
     public function update(Request $request, int $id, UserPermissionValidatorInterface $validator)

@@ -18,8 +18,8 @@ class TaskMapper
             $model->title,
             $model->description,
             $model->is_completed,
-            $model->created_at,
-            $model->updated_at
+            \DateTimeImmutable::createFromMutable($model->created_at),
+            \DateTimeImmutable::createFromMutable($model->updated_at)
         );
     }
 

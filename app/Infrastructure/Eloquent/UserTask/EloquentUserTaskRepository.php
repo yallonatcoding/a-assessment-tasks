@@ -5,6 +5,7 @@ namespace App\Infrastructure\Eloquent\UserTask;
 use App\Domain\Shared\PagedResult;
 use App\Domain\UserTask\UserTask;
 use App\Domain\UserTask\UserTaskRepositoryInterface;
+use App\Infrastructure\Eloquent\Task\EloquentTaskModel;
 use App\Infrastructure\Eloquent\UserTask\EloquentUserTaskModel;
 use App\Infrastructure\Eloquent\UserTask\UserTaskMapper;
 use Illuminate\Database\QueryException;
@@ -67,18 +68,17 @@ class EloquentUserTaskRepository implements UserTaskRepositoryInterface
         int $perPage = 15
     ): PagedResult
     {
-        $query = EloquentUserTaskModel::query()
-            ->with('task')
-            ->where('user_id', $userId)
+        $query = EloquentTaskModel::query()
+            ->join('users_tasks', 'tasks.id', '=', 'users_tasks.task_id')
+            ->where('users_tasks.user_id', $userId)
             ->when(!empty($filters['search']), function ($q) use ($filters) {
-                $q->whereHas('task', function ($q2) use ($filters) {
-                    $q2->where('title', 'like', '%' . $filters['search'] . '%');
-                });
+                $q->where('tasks.title', 'like', '%' . $filters['search'] . '%');
             })
             ->when(!empty($filters['is_completed']), function ($q) use ($filters) {
-                $q->where('is_completed', $filters['is_completed']);
+                $q->where('users_tasks.is_completed', $filters['is_completed']);
             })
-            ->orderBy($filters['sort_by'] ?? 'created_at', $filters['sort_dir'] ?? 'desc');
+            ->orderBy($filters['sort_by'] ?? 'tasks.created_at', $filters['sort_dir'] ?? 'desc')
+            ->select('tasks.*'); // opcional si no quieres campos del pivot
 
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
         $done = $paginator->currentPage() >= $paginator->lastPage();

@@ -16,8 +16,8 @@ class UserTaskMapper
             $model->id,
             $model->user_id,
             $model->task_id,
-            $model->created_at,
-            $model->updated_at
+            \DateTimeImmutable::createFromMutable($model->created_at),
+            \DateTimeImmutable::createFromMutable($model->updated_at)
         );
     }
 

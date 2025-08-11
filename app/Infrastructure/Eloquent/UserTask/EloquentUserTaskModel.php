@@ -3,6 +3,7 @@
 namespace App\Infrastructure\Eloquent\UserTask;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Infrastructure\Eloquent\Task\EloquentTaskModel;
 
 class EloquentUserTaskModel extends Model
 {
@@ -22,4 +23,9 @@ class EloquentUserTaskModel extends Model
      * @var string
      */
     protected $table = 'users_tasks';
+
+    public function task()
+    {
+        return $this->belongsTo(EloquentTaskModel::class, 'task_id', 'id');
+    }
 }

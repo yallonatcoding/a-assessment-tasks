@@ -61,12 +61,6 @@ class EloquentTaskRepository implements TaskRepositoryInterface
         try {
             $updatedTask = DB::transaction(function () use ($task) {
                 $model = EloquentTaskModel::findOrFail($task->id());
-                $persisted = $model->getOriginal('updated_at');
-                $passed = $task->updatedAt()->format('Y-m-d H:i:s');
-
-                if ($persisted !== $passed) {
-                    throw new \Exception("Task was modified by someone else.");
-                }
 
                 $model->update(TaskMapper::toPersistence($task));
 
