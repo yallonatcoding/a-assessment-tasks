@@ -4,16 +4,13 @@ RUN apt-get update && apt-get install -y libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 WORKDIR /var/www/html
 
-FROM php:8.4-fpm AS prod
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    libpq-dev \
-    nginx \
+FROM php:8.4-apache AS prod
+RUN apt-get update && apt-get install -y libpq-dev unzip curl \
     && docker-php-ext-install pdo_pgsql \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN a2enmod rewrite
 WORKDIR /var/www/html
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 FROM node:20-alpine AS frontend_build
 WORKDIR /app
@@ -30,10 +27,7 @@ COPY . .
 RUN composer run-script post-autoload-dump
 COPY --from=frontend_build /app/public/build ./public/build
 
-FROM prod AS runtime
-WORKDIR /var/www/html
-COPY --from=backend_build /var/www/html /var/www/html
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-CMD ["sh", "-c", "php-fpm & nginx -g 'daemon off;'"]
+CMD ["apache2-foreground"]
