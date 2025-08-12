@@ -25,6 +25,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY . .
 RUN composer run-script post-autoload-dump
+RUN rm -rf node_modules
 COPY --from=frontend_build /app/public/build ./public/build
 
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
