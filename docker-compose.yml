@@ -2,6 +2,7 @@ services:
   php_composer:
     build:
       context: .
+      target: php_base
       dockerfile: Dockerfile
     container_name: php_composer
     volumes:

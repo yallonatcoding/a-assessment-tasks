@@ -1,6 +1,7 @@
 import TasksView from '@/Components/Task/TasksView';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import { Divider } from 'primereact/divider';
 
 export default function Dashboard() {
     return (
@@ -13,11 +14,15 @@ export default function Dashboard() {
         >
             <Head title="Mis tareas" />
 
-            <div className="py-6">
-                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+            <div className='pt-2'>
+                <div className=" mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-2xl">
                         <div className="p-6 text-gray-900">
-                            <TasksView />
+                            <div className=''>
+                                <Divider />
+
+                                <TasksView />
+                            </div>
                         </div>
                     </div>
                 </div>
