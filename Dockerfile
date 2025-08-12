@@ -26,4 +26,4 @@ COPY --from=frontend_build /app/public/build ./public/build
 # Stage final para producción
 FROM php_base AS runtime
 COPY --from=backend_build /var/www/html /var/www/html
-CMD ["php-fpm"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
