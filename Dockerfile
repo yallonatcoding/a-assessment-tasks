@@ -36,4 +36,4 @@ COPY --from=backend_build /var/www/html /var/www/html
 
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-CMD ["sh", "-c", "php-fpm && nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "php-fpm & nginx -g 'daemon off;'"]
