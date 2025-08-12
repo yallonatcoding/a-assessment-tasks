@@ -15,15 +15,19 @@ RUN npm run build
 
 # Stage backend (Laravel optimizado)
 FROM php_base AS backend_build
-WORKDIR /app
+WORKDIR /var/www/html
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY . .
 RUN composer run-script post-autoload-dump
+
 # Copiar assets compilados
 COPY --from=frontend_build /app/public/build ./public/build
 
 # Stage final para producción
 FROM php_base AS runtime
+WORKDIR /var/www/html
 COPY --from=backend_build /var/www/html /var/www/html
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+
+# Ejecutar migraciones y luego el servidor embebido (puedes cambiar a php-fpm si quieres)
+CMD php artisan serve --host=0.0.0.0 --port=8080
