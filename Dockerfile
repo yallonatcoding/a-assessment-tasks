@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y libpq-dev \
 WORKDIR /var/www/html
 
 # Stage frontend (build assets con Vite)
-FROM node:22-alpine AS frontend_build
+FROM node:20-alpine AS frontend_build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
@@ -15,9 +15,11 @@ RUN npm run build
 
 # Stage backend (Laravel optimizado)
 FROM php_base AS backend_build
+WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 COPY . .
+RUN composer run-script post-autoload-dump
 # Copiar assets compilados
 COPY --from=frontend_build /app/public/build ./public/build
 
